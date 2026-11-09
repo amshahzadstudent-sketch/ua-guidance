@@ -127,7 +127,36 @@ EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 # --------------------------------------------------------------------------
 # DATABASE
 # --------------------------------------------------------------------------
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or ""
+USE_PG = DATABASE_URL.startswith("postgres")
+
+
+class PgDB:
+    """Tiny wrapper so the Postgres connection behaves like the sqlite one
+    used everywhere below (same execute / fetchone / fetchall calls)."""
+
+    def __init__(self):
+        import psycopg
+        from psycopg.rows import dict_row
+        self.conn = psycopg.connect(DATABASE_URL, autocommit=True, row_factory=dict_row)
+
+    def execute(self, sql, params=()):
+        if sql.strip().upper() == "BEGIN IMMEDIATE":
+            self.conn.execute("BEGIN")
+            # one booking at a time, so two students cannot take the same slot
+            return self.conn.execute("LOCK TABLE appointments IN SHARE ROW EXCLUSIVE MODE")
+        return self.conn.execute(sql.replace("?", "%s"), params)
+
+    def commit(self):
+        pass
+
+    def close(self):
+        self.conn.close()
+
+
 def connect():
+    if USE_PG:
+        return PgDB()
     db = sqlite3.connect(DB_PATH, isolation_level=None)  # manual transactions
     db.row_factory = sqlite3.Row
     return db
@@ -146,26 +175,43 @@ def close_db(_exc):
         db.close()
 
 
-def init_db():
-    db = connect()
-    db.executescript("""
-    CREATE TABLE IF NOT EXISTS counselors(
+SQLITE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS counselors(
+    username TEXT PRIMARY KEY, name TEXT NOT NULL, pw_hash TEXT NOT NULL,
+    failed INTEGER DEFAULT 0, locked_until REAL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS appointments(
+    ref TEXT PRIMARY KEY, counselor TEXT NOT NULL, day TEXT NOT NULL,
+    start INTEGER NOT NULL, dur INTEGER NOT NULL, service TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'Pending',
+    id_hash TEXT NOT NULL, enc TEXT NOT NULL, created REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS ix_slot ON appointments(counselor, day);
+CREATE TABLE IF NOT EXISTS audit(
+    id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT,
+    action TEXT, detail TEXT);
+"""
+
+PG_SCHEMA = [
+    """CREATE TABLE IF NOT EXISTS counselors(
         username TEXT PRIMARY KEY, name TEXT NOT NULL, pw_hash TEXT NOT NULL,
-        failed INTEGER DEFAULT 0, locked_until REAL DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS appointments(
+        failed INTEGER DEFAULT 0, locked_until DOUBLE PRECISION DEFAULT 0)""",
+    """CREATE TABLE IF NOT EXISTS appointments(
         ref TEXT PRIMARY KEY, counselor TEXT NOT NULL, day TEXT NOT NULL,
         start INTEGER NOT NULL, dur INTEGER NOT NULL, service TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'Pending',
-        id_hash TEXT NOT NULL, enc TEXT NOT NULL, created REAL NOT NULL);
-    CREATE INDEX IF NOT EXISTS ix_slot ON appointments(counselor, day);
-    CREATE TABLE IF NOT EXISTS email_codes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, sid TEXT, email TEXT, ip TEXT,
-        code_hash TEXT, created REAL, expires REAL, tries INTEGER DEFAULT 0,
-        verified INTEGER DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS audit(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT,
-        action TEXT, detail TEXT);
-    """)
+        id_hash TEXT NOT NULL, enc TEXT NOT NULL, created DOUBLE PRECISION NOT NULL)""",
+    "CREATE INDEX IF NOT EXISTS ix_slot ON appointments(counselor, day)",
+    """CREATE TABLE IF NOT EXISTS audit(
+        id SERIAL PRIMARY KEY, ts TEXT, actor TEXT, action TEXT, detail TEXT)""",
+]
+
+
+def init_db():
+    db = connect()
+    if USE_PG:
+        for stmt in PG_SCHEMA:
+            db.execute(stmt)
+    else:
+        db.executescript(SQLITE_SCHEMA)
     db.close()
 
 def update_counselor_names():
@@ -190,9 +236,14 @@ def seed():
     and COUNSELOR_PW_MICA as environment variables so you know the passwords."""
     db = connect()
     for user, (name, _) in COUNSELORS.items():
-        if db.execute("SELECT 1 FROM counselors WHERE username=?", (user,)).fetchone():
-            continue
         env_pw = os.environ.get(f"COUNSELOR_PW_{user.upper()}")
+        existing = db.execute("SELECT pw_hash FROM counselors WHERE username=?", (user,)).fetchone()
+        if existing:
+            # keep the password in sync with the environment variable
+            if env_pw and not check_password_hash(existing["pw_hash"], env_pw):
+                db.execute("UPDATE counselors SET pw_hash=? WHERE username=?",
+                           (generate_password_hash(env_pw), user))
+            continue
         pw = env_pw or secrets.token_urlsafe(9)
         db.execute("INSERT INTO counselors(username,name,pw_hash) VALUES(?,?,?)",
                    (user, name, generate_password_hash(pw)))
@@ -483,7 +534,7 @@ def api_book():
                    "VALUES(?,?,?,?,?,?,?,?,?)",
                    (ref, counselor, day, start, dur, svc, id_hash(sno), encrypt(record, ref), t))
         db.execute("COMMIT")
-    except sqlite3.Error:
+    except Exception:
         db.execute("ROLLBACK")
         raise
     audit("student", "book", ref)

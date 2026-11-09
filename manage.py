@@ -21,6 +21,15 @@ def main():
         n = int(sys.argv[2]) if len(sys.argv) > 2 else 30
         for r in A.connect().execute("SELECT * FROM audit ORDER BY id DESC LIMIT ?", (n,)):
             print(r["ts"], r["actor"], r["action"], r["detail"])
+    elif cmd == "users":
+        db = A.connect()
+    rows = db.execute(
+        "SELECT username FROM counselors ORDER BY username"
+    ).fetchall()
+
+    print("\n=== COUNSELOR ACCOUNTS ===")
+    for r in rows:
+        print("Username:", r["username"])
     else:
         print(__doc__)
 
