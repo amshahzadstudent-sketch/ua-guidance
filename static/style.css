@@ -1,0 +1,87 @@
+:root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#4b5877;--line:#d9e0ef;--navy:#14295f;--acc:#14295f;--acc-ink:#fff;--link:#1f3f94;--soft:#eaeffb;--gold:#f2b705;--gold-d:#d9a200;--warn:#b4531a;--ok:#2d7a4f}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:12px 18px 40px}
+h1{font:600 clamp(26px,5.5vw,34px)/1.2 Georgia,serif;margin:22px 0 10px;color:var(--navy)}
+h2{font:600 20px/1.3 Georgia,serif;margin:0 0 12px;color:var(--navy)}
+p{margin:0 0 12px}.mute{color:var(--mute);font-size:14px}
+a{color:var(--link)}
+
+/* Header */
+.bar{background:var(--navy);border-bottom:4px solid var(--gold);color:#fff}
+.bar-in{position:relative;max-width:760px;margin:0 auto;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+.logo img{width:48px;height:48px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--gold)}
+.logo small{display:block;font-size:11px;color:#c9d4f2;letter-spacing:.06em;text-transform:uppercase}
+.logo b{font:600 19px Georgia,serif;color:#fff}
+.nav{display:flex;align-items:center;gap:6px 18px;flex-wrap:wrap;justify-content:flex-end}
+.nav a{color:#fff;text-decoration:none;font-size:14px;font-weight:500;padding:6px 2px;border-bottom:2px solid transparent}
+.nav a:hover{border-bottom-color:var(--gold)}
+.nav form{margin:0}
+.bar :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.badge{font-size:13px;font-weight:600;color:var(--gold)}
+.bar .lnk{color:#fff}
+.navt{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.burger{display:none;cursor:pointer;padding:10px;margin-left:auto}
+.burger span{display:block;width:24px;height:3px;background:#fff;border-radius:2px;margin:4px 0}
+.navt:focus-visible+.burger{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:600px){
+  .bar-in{flex-wrap:wrap}
+  .burger{display:block}
+  .nav{display:none;width:100%;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0 6px;border-top:1px solid rgba(255,255,255,.2)}
+  .navt:checked~.nav{display:flex}
+  .nav a{padding:8px 0;width:100%}
+}
+
+/* Cards and forms */
+.card{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:10px;padding:22px;margin:16px 0;box-shadow:0 1px 3px rgba(20,41,95,.06)}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px;color:var(--navy)}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid #b9c4de;border-radius:8px;background:#fff;color:var(--ink);font:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--link)}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.how{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:520px){.two,.how{grid-template-columns:1fr}.card{padding:18px 14px}}
+.how div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:14px}.how b{display:block;color:var(--navy);font:600 22px Georgia,serif}
+
+/* Choice chips */
+.chip{padding:9px 14px;border:1px solid #b9c4de;border-radius:8px;background:#fff;color:var(--ink);font:500 14px "Segoe UI",sans-serif;cursor:pointer}
+.chip:hover:not(:disabled){border-color:var(--navy)}
+.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--gold)}
+.chip:disabled{opacity:.4;text-decoration:line-through;cursor:not-allowed}
+
+/* Buttons: gold primary, navy outline secondary */
+.btn{display:inline-block;padding:12px 22px;border:2px solid var(--gold);border-radius:8px;background:var(--gold);color:#1a1a1a;font:600 16px "Segoe UI",sans-serif;cursor:pointer;margin-top:14px;text-decoration:none;text-align:center}
+.btn:hover{background:var(--gold-d);border-color:var(--gold-d)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.o{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn.o:hover{background:var(--soft)}
+.btn.s{margin:0;padding:6px 12px;font-size:13px;border-width:1px}
+.lnk{background:none;border:0;color:var(--link);font:500 14px "Segoe UI",sans-serif;cursor:pointer;padding:0;text-decoration:underline}
+.err{color:var(--warn);font-size:14px;margin-top:10px;min-height:1em}
+.who{padding:10px 12px;background:var(--soft);border-left:4px solid var(--gold);border-radius:8px;font-size:14px;margin-top:10px;color:var(--navy)}
+
+/* Booking stepper */
+.steps{display:flex;gap:6px;list-style:none;padding:0;margin:0 0 20px}
+.steps li{flex:1;font-size:12px;text-align:center;padding:8px 2px;border-bottom:4px solid var(--line);color:var(--mute)}
+.steps li.on{color:var(--navy);font-weight:700;border-color:var(--gold)}
+.steps li.done{color:var(--navy);border-color:var(--navy)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;color:var(--ink)}.chk input{width:auto;margin-top:4px}
+
+/* Lists, receipt, tags */
+.code{font:600 30px Georgia,serif;letter-spacing:.06em;color:var(--navy)}
+.item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}.tag{font-size:13px;font-weight:600}.tag.p{color:var(--warn)}.tag.c{color:var(--ok)}
+.rc{border:1px dashed #aeb9d6;border-radius:8px;padding:6px 16px;margin:14px 0;background:#fbfcff}.rc .item{padding:9px 0}.rc .item span:first-child{color:var(--mute);font-size:14px}.rc .item span:last-child{font-weight:600;text-align:right}
+.big{font:600 56px Georgia,serif;color:var(--navy);line-height:1;border-bottom:4px solid var(--gold);display:inline-block;padding-bottom:6px}
+.seal{display:none}
+form.inline{display:inline;margin:0}
+
+/* Footer */
+footer{background:var(--navy);border-top:4px solid var(--gold);color:#dbe3f8;text-align:center}
+.foot-in{max-width:760px;margin:0 auto;padding:18px;font-size:14px}
+footer b{color:#fff}
+
+[hidden]{display:none!important}
+@media print{.bar .nav,.bar .burger,.bar form,.noprint{display:none!important}.bar{background:#fff;color:#000;border-bottom:2px solid #000}.logo,.logo b,.logo small{color:#000}body{background:#fff;color:#000}.card{border:0;box-shadow:none}footer{background:#fff;color:#000;border-top:1px solid #000}footer b{color:#000}}

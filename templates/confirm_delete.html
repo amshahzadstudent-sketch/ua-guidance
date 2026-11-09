@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Appointment{% endblock %}
+
+{% block body %}
+
+<h1>Delete Appointment</h1>
+
+<div class="card">
+
+    <h2>Are you sure?</h2>
+
+    <p>
+        You are about to permanently delete this appointment.
+    </p>
+
+    <p>
+        <strong>Reference:</strong>
+        {{ appointment.ref }}
+    </p>
+
+    <p>
+        <strong>Service:</strong>
+        {{ appointment.service }}
+    </p>
+
+    <p>
+        <strong>Date:</strong>
+        {{ appointment.day|pretty }}
+    </p>
+
+    <p>
+        <strong>Time:</strong>
+        {{ appointment.start|fmt_time }}
+    </p>
+
+    <form method="POST"
+          action="{{ url_for('delete_appointment', ref=appointment.ref) }}">
+
+        <input type="hidden"
+               name="_csrf"
+               value="{{ csrf_token() }}">
+
+        <button class="btn o"
+                type="submit"
+                style="color:#b42318; border-color:#b42318;">
+
+            Yes, Delete Permanently
+
+        </button>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="btn o"
+           style="text-decoration:none;">
+
+            Back
+
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

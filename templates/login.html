@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Counselor login{% endblock %}
+{% block body %}
+<div class="card"><h2>Counselor login</h2>
+<form method="post" autocomplete="off">
+<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+<label for="username" style="margin-top:0">Username</label><input id="username" name="username" maxlength="20" required>
+<label for="password">Password</label><input id="password" name="password" type="password" maxlength="80" required>
+<div class="err" role="alert">{{ error }}</div>
+<div class="row"><button class="btn">Log in</button><a class="btn o" href="{{ url_for('home') }}">Back</a></div>
+</form></div>
+{% endblock %}

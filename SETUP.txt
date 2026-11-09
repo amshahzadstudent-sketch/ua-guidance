@@ -1,0 +1,31 @@
+Gmail SMTP for the existing UA Guidance project
+
+1. Copy start_gmail.py beside your existing app.py. Do not replace your data folder.
+2. Sign in to the intended sender Google account. Enable 2-Step Verification and
+   create an App Password at https://myaccount.google.com/apppasswords .
+   School administrators may restrict App Passwords. If unavailable, ask UA IT
+   whether they permit App Passwords, SMTP relay, or require OAuth instead.
+   Do not use your regular Google password or share the App Password in chat.
+3. Stop the current server with Ctrl+C. In the VS Code terminal, run:
+   .\.venv\Scripts\python.exe start_gmail.py
+4. Enter the sender email and App Password when prompted. Password input is hidden.
+   The launcher checks SMTP login before starting the existing website.
+   Credentials stay in the running process and are not written to a config file.
+5. Request one verification code and check the destination inbox/spam folder.
+   Then complete a test booking and confirm it through its assigned counselor.
+   Check that the student receives the confirmation email.
+
+Login-only check (sends no email):
+   .\.venv\Scripts\python.exe start_gmail.py --check
+
+Always use this launcher to enable Gmail. Running app.py alone retains its normal
+environment-based behavior. Booking, confirmation and cancellation emails already
+exist in app.py. No backend, database, counselor accounts or booking UI is replaced.
+
+SMTP login success does not prove inbox delivery. Existing backend logs email
+failures to the terminal; a booking/status change can succeed even if email fails.
+The existing code-request rate limit still applies. Wait 10 minutes if limited.
+
+Google documentation:
+https://support.google.com/mail/answer/7104828?hl=en
+https://support.google.com/a/answer/176600?hl=en

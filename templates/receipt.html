@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ a.ref }}{% endblock %}
+{% block body %}
+<div class="card"><h2>Appointment receipt</h2><div class="code">{{ a.ref }}</div>
+<div class="rc">
+<div class="item"><span>Name</span><span>{{ r.name }}</span></div>
+<div class="item"><span>Student number</span><span>{{ masked }}</span></div>
+<div class="item"><span>Program and section</span><span>{{ r.program }} {{ r.section }}</span></div>
+<div class="item"><span>Counselor</span><span>{{ cname }}</span></div>
+<div class="item"><span>Service</span><span>{{ a.service }} ({{ a.dur }} mins)</span></div>
+<div class="item"><span>Date</span><span>{{ a.day|pretty }}</span></div>
+<div class="item"><span>Time</span><span>{{ a.start|fmt_time }} to {{ (a.start + a.dur)|fmt_time }}</span></div>
+<div class="item"><span>Status</span><span>{{ a.status }}{% if a.status == 'Pending' %} (awaiting confirmation){% endif %}</span></div>
+<div class="item"><span>Issued</span><span>{{ issued }}</span></div></div>
+<p class="mute">Valid only when confirmed by your counselor. Show this receipt or the reference code at the Guidance Office. Your student number is partly hidden for privacy. A confirmation will be sent to your email.</p>
+<div class="row noprint"><a class="btn" href="{{ url_for('home') }}">Back to home</a><button class="btn o" type="button" data-print>Print or save as PDF</button></div></div>
+{% endblock %}

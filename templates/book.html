@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Book an appointment — UA Guidance Office{% endblock %}
+{% block body %}
+<h1>Book an Appointment</h1>
+<div class="card" id="booking-form" data-cfg="{{ cfg }}">
+  <ol class="steps">
+    <li id="p1">1 Details</li>
+    <li id="p2">2 Verify</li>
+    <li id="p3">3 Service</li>
+    <li id="p4">4 Review</li>
+  </ol>
+
+  <!-- Step 1: Details -->
+  <div id="s1">
+    <h2>Your details</h2>
+    <label for="nm" style="margin-top:0">Full name</label>
+    <input id="nm" autocomplete="name" maxlength="60" placeholder="e.g. Juan dela Cruz">
+    <div class="two">
+      <div>
+        <label for="sid">Student number</label>
+        <input id="sid" inputmode="numeric" maxlength="15" placeholder="e.g. 2024-00001">
+      </div>
+      <div>
+        <label for="sec">Section</label>
+        <input id="sec" maxlength="12" placeholder="e.g. 3A">
+      </div>
+    </div>
+    <label for="prog">Program</label>
+    <select id="prog"></select>
+    <div class="who" id="bw"></div>
+  </div>
+
+  <!-- Step 2: Verify -->
+  <div id="s2" hidden>
+    <h2>Verify your contact details</h2>
+    <div class="two">
+      <div>
+        <label for="em" style="margin-top:0">School email{% if domain %} (@{{ domain }}){% endif %}</label>
+        <input id="em" type="email" autocomplete="email" maxlength="80" placeholder="yourname@ua.edu.ph">
+      </div>
+      <div>
+        <label for="ph" style="margin-top:0">Phone number</label>
+        <input id="ph" type="tel" maxlength="16" placeholder="09XXXXXXXXX">
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn o s" id="sendc" type="button">Send verification code</button>
+      <span class="mute" id="cmsg"></span>
+    </div>
+    <label for="vc">Verification code</label>
+    <div class="row">
+      <input id="vc" inputmode="numeric" maxlength="6" placeholder="6-digit code" style="max-width:200px">
+      <button class="btn o s" id="verc" type="button">Verify</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Service & schedule -->
+  <div id="s3" hidden>
+    <h2>Service</h2>
+    <div class="row" id="svc"></div>
+    <h2 style="margin-top:24px">Date and time</h2>
+    <div class="row" id="days"></div>
+    <div class="row mute" id="slots" style="margin-top:10px"></div>
+    <label for="nt">Note for the counselor <span style="font-weight:400;color:var(--mute)">(optional)</span></label>
+    <textarea id="nt" rows="3" maxlength="300" placeholder="Anything you'd like your counselor to know beforehand…"></textarea>
+  </div>
+
+  <!-- Step 4: Review -->
+  <div id="s4" hidden>
+    <h2>Review your booking</h2>
+    <div class="rc" id="rv"></div>
+    <label class="chk">
+      <input type="checkbox" id="cons">
+      <span>I agree that the Guidance Office may collect and use my details only to schedule and manage my appointment, as allowed by the Data Privacy Act of 2012 (RA 10173).</span>
+    </label>
+  </div>
+
+  <div class="err" id="err" role="alert"></div>
+  <div class="row">
+    <button class="btn o" id="back" type="button">Back</button>
+    <button class="btn" id="next" type="button">Next</button>
+    <button class="btn" id="book" type="button" hidden>Confirm booking</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='book.js', v='booking-fix-2') }}"></script>{% endblock %}

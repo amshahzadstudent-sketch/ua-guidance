@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block body_class %}wide-page{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='landing.css', v='redesign-1') }}">{% endblock %}
+{% block body %}
+<div class="home">
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-bg-text" aria-hidden="true">GUIDANCE</div>
+    <div class="wrap hero-inner">
+      <div class="hero-text">
+        <p class="eyebrow">UA Guidance Office</p>
+        <h1 id="hero-title">Your next step starts with a conversation.</h1>
+        <p class="lead">Choose a service, request an available schedule, and receive an email when your assigned counselor confirms your appointment.</p>
+        <div class="hero-cta">
+          <a class="h-btn gold" href="{{ url_for('book_page') }}">Book an Appointment</a>
+          <a class="h-btn ghost" href="#check-booking">Check My Booking</a>
+        </div>
+      </div>
+      <div class="hero-cards" aria-hidden="true">
+        <div class="hc hc-1">
+          <span class="hc-label">Counseling</span>
+          <span class="hc-time">30 mins</span>
+        </div>
+        <div class="hc hc-2">
+          <span class="hc-label">Initial Interview</span>
+          <span class="hc-time">15 mins</span>
+        </div>
+        <div class="hc hc-3">
+          <span class="hc-label">Mon – Fri</span>
+          <span class="hc-time">9AM – 5PM</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="band" aria-labelledby="svc-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="svc-title">Guidance services</h2>
+        <p class="section-sub">Select from these services when you book your appointment.</p>
+      </div>
+      <ul class="svc-grid">
+        {% for name, mins in services.items() %}
+        <li>
+          <div class="svc-icon">●</div>
+          <div class="svc-info">
+            <span class="svc-name">{{ name }}</span>
+            <span class="svc-time">{{ mins }} min session</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="band tint" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="how-title">How it works</h2>
+        <p class="section-sub">Three steps to book your appointment.</p>
+      </div>
+      <ol class="how-list">
+        <li>
+          <div class="how-num">1</div>
+          <div class="how-body">
+            <strong>Fill in your details</strong>
+            <span>Enter your name, student number, section, and select your program.</span>
+          </div>
+        </li>
+        <li>
+          <div class="how-num">2</div>
+          <div class="how-body">
+            <strong>Verify your school email</strong>
+            <span>We send a 6-digit code to your UA email to confirm your identity.</span>
+          </div>
+        </li>
+        <li>
+          <div class="how-num">3</div>
+          <div class="how-body">
+            <strong>Pick a time and confirm</strong>
+            <span>Choose an available slot, review your booking, and save your reference code.</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- COUNSELORS -->
+  <section class="band" aria-labelledby="cn-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="cn-title">Meet your counselors</h2>
+        <p class="section-sub">Each program has a dedicated assigned counselor.</p>
+      </div>
+      <ul class="cn-grid">
+        {% for u, c in counselors.items() %}
+        <li>
+          <img class="avatar counselor-photo"
+               src="{{ url_for('static', filename='counselors/' ~ u ~ '.jpg') }}"
+               data-fallback="{{ url_for('static', filename='counselors/placeholder.svg') }}"
+               alt="Profile photo of {{ c[0] }}"
+               width="64" height="64" loading="lazy">
+          <div class="cn-info">
+            <strong>{{ c[0] }}</strong>
+            <span class="cn-prog">{{ c[1]|join(', ') }}</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <!-- OFFICE HOURS -->
+  <section class="band tint" aria-labelledby="hrs-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="hrs-title">Office hours</h2>
+      </div>
+      <div class="hrs-row">
+        <div class="hrs-day">Monday to Friday</div>
+        <div class="hrs-slots">
+          <div class="hrs-slot">
+            <span class="hrs-label">Morning</span>
+            <span class="hrs-time">9:00 AM – 12:00 PM</span>
+          </div>
+          <div class="hrs-divider"></div>
+          <div class="hrs-slot">
+            <span class="hrs-label">Afternoon</span>
+            <span class="hrs-time">1:00 PM – 5:00 PM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ + CHECK BOOKING -->
+  <section class="band" id="check-booking" aria-labelledby="faq-title">
+    <div class="wrap split">
+      <div class="faq-col">
+        <div class="section-head" style="margin-bottom:0">
+          <h2 id="faq-title">Frequently asked questions</h2>
+        </div>
+        <details>
+          <summary>Who will I meet with?</summary>
+          <p>You are matched to the counselor assigned to your program. You will see their name as soon as you select your program in the booking form.</p>
+        </details>
+        <details>
+          <summary>Why do I need to verify my email?</summary>
+          <p>We send a 6-digit code to your school email to confirm it is really you. The code is valid for 5 minutes.</p>
+        </details>
+        <details>
+          <summary>Is my booking confirmed right away?</summary>
+          <p>Your booking starts as Pending. It becomes valid once your counselor confirms it. Keep your receipt or reference code and show it at the Guidance Office.</p>
+        </details>
+        <details>
+          <summary>How do I check my booking?</summary>
+          <p>Enter your reference code in the Check my booking form to see its latest status.</p>
+        </details>
+      </div>
+      <div class="check-col">
+        <div class="check" aria-labelledby="chk-title">
+          <h2 id="chk-title">Check my booking</h2>
+          <p class="check-hint">Enter your reference code to view your booking status.</p>
+          <form method="get" action="{{ url_for('check') }}" class="chk-form">
+            <input name="ref" placeholder="e.g. GO-AB12C" maxlength="10" aria-label="Reference code">
+            <button class="h-btn navy" type="submit">Check Status</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll(
+      '.home .band, .home .svc-grid li, .home .how-list li, ' +
+      '.home .cn-grid li, .home .hrs-row, .home .check, ' +
+      '.home details, .home .section-head'
+    ).forEach(el => io.observe(el));
+  });
+</script>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='counselors.js', v='1') }}"></script>{% endblock %}

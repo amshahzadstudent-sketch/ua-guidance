@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+
+<h1>Dashboard: {{ staff_name }}</h1>
+
+<p class="mute">
+You see only the students assigned to you.
+Your session ends after 15 minutes of inactivity.
+</p>
+
+<div class="card">
+
+<h2>Appointments</h2>
+
+{% for i in items %}
+
+<div class="item">
+
+    <div>
+
+        {% if i.bad %}
+
+            <strong>{{ i.a.ref }}</strong><br>
+
+            <span class="tag p">
+                Warning: this record failed the integrity check.
+            </span>
+
+        {% else %}
+
+            <strong>{{ i.r.name }}</strong>
+
+            <span class="mute">
+                {{ i.r.student_no }} |
+                {{ i.r.program }}
+                {{ i.r.section }}
+            </span>
+
+            <br>
+
+            {{ i.a.service }}
+            ({{ i.a.dur }} mins),
+            {{ i.a.day|pretty }}
+            {{ i.a.start|fmt_time }}
+
+            <br>
+
+            <span class="mute">
+                {{ i.r.email }} |
+                {{ i.r.phone }} |
+                {{ i.a.ref }}
+
+                {% if i.r.note %}
+                    | {{ i.r.note }}
+                {% endif %}
+            </span>
+
+        {% endif %}
+
+    </div>
+
+    <div class="row" style="justify-content:flex-end">
+
+        <span class="tag {{ 'c' if i.a.status == 'Confirmed' else 'p' }}">
+            {{ i.a.status }}
+        </span>
+
+        {% if i.a.status == 'Pending' %}
+
+        <form class="inline"
+              method="post"
+              action="{{ url_for('change_status', ref=i.a.ref, action='confirm') }}">
+
+            <input type="hidden"
+                   name="_csrf"
+                   value="{{ csrf_token() }}">
+
+            <button class="btn o s">
+                Confirm
+            </button>
+
+        </form>
+
+        {% endif %}
+
+        {% if i.a.status != 'Cancelled' %}
+
+        <form class="inline"
+              method="post"
+              action="{{ url_for('change_status', ref=i.a.ref, action='cancel') }}">
+
+            <input type="hidden"
+                   name="_csrf"
+                   value="{{ csrf_token() }}">
+
+            <button class="btn o s">
+                Cancel
+            </button>
+
+        </form>
+
+        {% endif %}
+
+        <a class="btn o s"
+           href="{{ url_for('confirm_delete', ref=i.a.ref) }}"
+           style="color:#b42318; border-color:#b42318; text-decoration:none;">
+
+            Delete
+
+        </a>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<p class="mute">No appointments yet.</p>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

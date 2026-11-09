@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card"><div class="big">{{ code }}</div><h2 style="margin-top:10px">{% if code == 403 %}Access denied{% else %}Something went wrong{% endif %}</h2>
+<p>{{ msg }}</p><a class="btn" href="{{ url_for('home') }}">Go to home</a></div>
+{% endblock %}

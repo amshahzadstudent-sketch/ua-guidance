@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card"><h2>Booking status</h2>
+{% if a %}<div class="rc">
+<div class="item"><span>Reference</span><span>{{ a.ref }}</span></div>
+<div class="item"><span>Date</span><span>{{ a.day|pretty }}</span></div>
+<div class="item"><span>Time</span><span>{{ a.start|fmt_time }} to {{ (a.start + a.dur)|fmt_time }}</span></div>
+<div class="item"><span>Service</span><span>{{ a.service }}</span></div>
+<div class="item"><span>Counselor</span><span>{{ cname }}</span></div>
+<div class="item"><span>Status</span><span class="tag {{ 'c' if a.status == 'Confirmed' else 'p' }}">{{ a.status }}</span></div></div>
+{% elif searched %}<p class="mute">No booking found for that code.</p>{% else %}<p class="mute">Enter a reference code on the home page.</p>{% endif %}
+<a class="btn" href="{{ url_for('home') }}">Back to home</a></div>
+{% endblock %}
