@@ -275,7 +275,7 @@ def send_mail(to, subject, body):
     host = os.environ.get("SMTP_HOST")
     if not host:
         print(f"\n[DEV EMAIL] To: {to}\nSubject: {subject}\n{body}\n")
-        return
+        return True
     msg = EmailMessage()
     msg["From"] = os.environ.get("SMTP_FROM", os.environ.get("SMTP_USER", ""))
     msg["To"], msg["Subject"] = to, subject
@@ -286,8 +286,10 @@ def send_mail(to, subject, body):
             if os.environ.get("SMTP_USER"):
                 s.login(os.environ["SMTP_USER"], os.environ.get("SMTP_PASS", ""))
             s.send_message(msg)
+        return True
     except Exception as exc:  # never crash a booking because email failed
         app.logger.error("email failed: %s", exc)
+        return False
 
 
 # --------------------------------------------------------------------------
@@ -398,9 +400,11 @@ def api_send_code():
     session["vc"] = {"email": email, "h": code_hash(sid, email, code),
                      "exp": t + 300, "tries": 0}
     session.pop("vok", None)
-    send_mail(email, "UA Guidance Office verification code",
-              f"Your verification code is {code}. It expires in 5 minutes.\n"
-              "If you did not request it, ignore this email.")
+    sent = send_mail(email, "UA Guidance Office verification code",
+                     f"Your verification code is {code}. It expires in 5 minutes.\n"
+                     "If you did not request it, ignore this email.")
+    if not sent:
+        return jsonify(error="Could not send the email. Please try again later."), 502
     return jsonify(ok=True)
 
 
