@@ -56,6 +56,11 @@ os.makedirs(DATA, exist_ok=True)
 def _key(name: str, env: str) -> bytes:
     if os.environ.get(env):
         return base64.b64decode(os.environ[env])
+    if ON_VERCEL:
+        # DEMO FALLBACK: every Vercel instance must use the SAME key, so derive
+        # one from the project id. For real use, set SECRET_KEY / ENC_KEY.
+        seed_txt = os.environ.get("VERCEL_PROJECT_ID", "ua-guidance-demo")
+        return hashlib.sha256(f"{name}:{seed_txt}".encode()).digest()
     path = os.path.join(DATA, name)
     if not os.path.exists(path):
         with open(path, "wb") as f:
@@ -381,18 +386,18 @@ def api_send_code():
     email, err = clean_email((request.get_json(silent=True) or {}).get("email"))
     if err:
         return jsonify(error=err), 400
-    db, t = get_db(), time.time()
+    t = time.time()
     sid = session.setdefault("sid", secrets.token_hex(8))
-    per_session = db.execute("SELECT COUNT(*) c FROM email_codes WHERE sid=? AND created>?",
-                             (sid, t - 600)).fetchone()["c"]
-    per_ip = db.execute("SELECT COUNT(*) c FROM email_codes WHERE ip=? AND created>?",
-                        (request.remote_addr, t - 600)).fetchone()["c"]
-    if per_session >= 3 or per_ip >= 10:  # stops email flooding
+    recent = [x for x in session.get("code_log", []) if x > t - 600]
+    if len(recent) >= 3:  # stops email flooding
         return jsonify(error="Too many codes requested. Try again in 10 minutes."), 429
     code = str(secrets.randbelow(900000) + 100000)
-    db.execute("INSERT INTO email_codes(sid,email,ip,code_hash,created,expires) "
-               "VALUES(?,?,?,?,?,?)",
-               (sid, email, request.remote_addr, code_hash(sid, email, code), t, t + 300))
+    # The pending code lives in the signed session cookie, so it works even
+    # when Vercel runs each request on a different server instance.
+    session["code_log"] = recent + [t]
+    session["vc"] = {"email": email, "h": code_hash(sid, email, code),
+                     "exp": t + 300, "tries": 0}
+    session.pop("vok", None)
     send_mail(email, "UA Guidance Office verification code",
               f"Your verification code is {code}. It expires in 5 minutes.\n"
               "If you did not request it, ignore this email.")
@@ -407,16 +412,16 @@ def code_hash(sid, email, code):
 def api_verify_code():
     data = request.get_json(silent=True) or {}
     email, err = clean_email(data.get("email"))
-    sid, db, t = session.get("sid"), get_db(), time.time()
-    row = db.execute("SELECT * FROM email_codes WHERE sid=? AND email=? ORDER BY id DESC",
-                     (sid, email)).fetchone() if sid and email else None
-    if not row or row["expires"] < t or row["tries"] >= 5:
+    sid, t = session.get("sid"), time.time()
+    vc = session.get("vc")
+    if not (sid and email and vc) or vc["email"] != email or vc["exp"] < t or vc["tries"] >= 5:
         return jsonify(error="Code expired or too many tries. Send a new code."), 400
-    db.execute("UPDATE email_codes SET tries=tries+1 WHERE id=?", (row["id"],))
-    ok = hmac.compare_digest(row["code_hash"], code_hash(sid, email, str(data.get("code", "")).strip()))
+    vc["tries"] += 1
+    session["vc"] = vc
+    ok = hmac.compare_digest(vc["h"], code_hash(sid, email, str(data.get("code", "")).strip()))
     if not ok:
         return jsonify(error="Wrong code."), 400
-    db.execute("UPDATE email_codes SET verified=1 WHERE id=?", (row["id"],))
+    session["vok"] = {"email": email, "t": t}
     return jsonify(ok=True)
 
 
@@ -445,8 +450,8 @@ def api_book():
 
     db, t, dur = get_db(), time.time(), SERVICES[svc]
     counselor = PROGRAM_TO_COUNSELOR[prog]
-    ok_email = db.execute("SELECT 1 FROM email_codes WHERE sid=? AND email=? AND verified=1 "
-                          "AND created>?", (session.get("sid"), email, t - 1800)).fetchone()
+    vok = session.get("vok") or {}
+    ok_email = vok.get("email") == email and vok.get("t", 0) > t - 1800
     if not ok_email:
         return jsonify(error="Please verify your email first."), 400
     if not isinstance(start, int) or not any(
