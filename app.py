@@ -38,7 +38,10 @@ except Exception:  # tzdata missing: fall back to the computer's clock
     TZ = None
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-DATA = os.environ.get("DATA_DIR", os.path.join(BASE, "data"))
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+# Vercel's project folder is read-only; /tmp is the only writable place there.
+DEFAULT_DATA = "/tmp/data" if ON_VERCEL else os.path.join(BASE, "data")
+DATA = os.environ.get("DATA_DIR", DEFAULT_DATA)
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA, "guidance.db"))
 os.makedirs(DATA, exist_ok=True)
 
@@ -47,6 +50,8 @@ os.makedirs(DATA, exist_ok=True)
 # KEYS: one for signing sessions, one master key for IDEA encryption of student details.
 # Created once and saved in data/. KEEP THEM SECRET AND BACKED UP: without
 # enc.key the encrypted student details can never be read again.
+# On Vercel, set SECRET_KEY and ENC_KEY as environment variables (base64),
+# otherwise new random keys are made on every cold start.
 # --------------------------------------------------------------------------
 def _key(name: str, env: str) -> bytes:
     if os.environ.get(env):
@@ -175,15 +180,21 @@ def update_counselor_names():
         db.close()
 
 def seed():
-    """Create the counselor accounts. Passwords are random and shown ONCE."""
+    """Create the counselor accounts. Passwords are random and shown ONCE.
+    On Vercel, set COUNSELOR_PW_LORNA, COUNSELOR_PW_PAIGE, COUNSELOR_PW_MARIA
+    and COUNSELOR_PW_MICA as environment variables so you know the passwords."""
     db = connect()
     for user, (name, _) in COUNSELORS.items():
         if db.execute("SELECT 1 FROM counselors WHERE username=?", (user,)).fetchone():
             continue
-        pw = secrets.token_urlsafe(9)
+        env_pw = os.environ.get(f"COUNSELOR_PW_{user.upper()}")
+        pw = env_pw or secrets.token_urlsafe(9)
         db.execute("INSERT INTO counselors(username,name,pw_hash) VALUES(?,?,?)",
                    (user, name, generate_password_hash(pw)))
-        print(f"  {user:8} {name:36} password: {pw}")
+        if env_pw:
+            print(f"  {user:8} {name:36} password: (from environment variable)")
+        else:
+            print(f"  {user:8} {name:36} password: {pw}")
     db.close()
 
 
@@ -621,6 +632,13 @@ def staff_logout():
     audit(session.get("staff", "unknown"), "logout")
     session.clear()
     return redirect(url_for("home"))
+
+
+# On Vercel the app is imported (not run), so the database and counselor
+# accounts must be created here, at startup, inside /tmp.
+if ON_VERCEL:
+    init_db()
+    seed()
 
 
 if __name__ == "__main__":
